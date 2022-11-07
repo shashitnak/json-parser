@@ -11,4 +11,4 @@ documentation = "https://docs.rs/jp-rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pa-rs = "*"
+pa-rs = "0.1.1"
