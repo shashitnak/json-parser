@@ -1,0 +1,14 @@
+[package]
+name = "jp-rs"
+license = "MIT"
+version = "0.1.0"
+authors = ["Shashi Kant <shashitnak42@proton.me"]
+edition = "2021"
+description = "JSON parser in rust using pa-rs library"
+repository = "https://github.com/shashitnak/jp-rs"
+documentation = "https://docs.rs/jp-rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pa-rs = "*"
