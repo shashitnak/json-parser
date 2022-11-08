@@ -4,8 +4,7 @@ use pa_rs::*;
 pub enum JSONValue {
     JSONNull,
     JSONBool(bool),
-    JSONInteger(i64),
-    JSONFloat(f64),
+    JSONNumber(f64),
     JSONString(String),
     JSONArray(Vec<JSONValue>),
     JSONObject(Vec<(String, JSONValue)>),
@@ -18,8 +17,7 @@ pub fn parse_json() -> Parser<JSONValue> {
         parse_json_object(),
         parse_json_array(),
         parse_json_string(),
-        parse_json_integer(),
-        parse_json_float(),
+        parse_json_number(),
         parse_json_bool(),
         parse_json_null(),
     ])
@@ -33,41 +31,20 @@ fn parse_json_bool() -> Parser<JSONValue> {
     parse_bool().map(|x| JSONBool(x))
 }
 
-fn parse_json_integer() -> Parser<JSONValue> {
-    parse_int().map(|x| JSONInteger(x))
-}
-
-fn parse_json_float() -> Parser<JSONValue> {
-    parse_float().map(|x| JSONFloat(x))
+fn parse_json_number() -> Parser<JSONValue> {
+    parse_float().map(|x| JSONNumber(x))
 }
 
 fn parse_json_string() -> Parser<JSONValue> {
     parse_string().map(|x| JSONString(x))
 }
 
-fn ws<T: 'static>(p: Parser<T>) -> Parser<T> {
-    parse_white_space() >> p << parse_white_space()
-}
-
 fn parse_json_array() -> Parser<JSONValue> {
-    parse_char('[')
-        >> (parse_one_of([
-            Parser::new(|input| {
-                (parse_zero_or_more(ws(parse_json()) << parse_char(',') << parse_white_space())
-                    & ws(parse_json()))
-                .map(|(mut v, a)| {
-                    v.push(a);
-                    JSONArray(v)
-                })
-                ._run(input)
-            }),
-            parse_white_space().map(|_| JSONArray(vec![])),
-        ]))
-        << parse_char(']')
+    Parser::new(|input| parse_list_of(|| parse_json())._run(input)).map(|v| JSONArray(v))
 }
 
 fn parse_json_object() -> Parser<JSONValue> {
-    let parse_kv = || ws(parse_string()) << parse_char(':') & ws(parse_json());
+    let parse_kv = || parse_sbws(parse_string()) << parse_char(':') & parse_sbws(parse_json());
     parse_char('{')
         >> parse_one_of([
             Parser::new(move |input| {
@@ -134,7 +111,7 @@ mod tests {
         let parsed_json = JSONObject(vec![
             (s("squadName"), JSONString(s("Super hero squad"))),
             (s("homeTown"), JSONString(s("Metro City"))),
-            (s("formed"), JSONInteger(2016)),
+            (s("formed"), JSONNumber(2016.0)),
             (s("secretBase"), JSONString(s("Super tower"))),
             (s("active"), JSONBool(true)),
             (
@@ -142,7 +119,7 @@ mod tests {
                 JSONArray(vec![
                     JSONObject(vec![
                         (s("name"), JSONString(s("Molecule Man"))),
-                        (s("age"), JSONInteger(29)),
+                        (s("age"), JSONNumber(29.0)),
                         (s("secretIdentity"), JSONString(s("Dan Jukes"))),
                         (
                             s("powers"),
@@ -155,7 +132,7 @@ mod tests {
                     ]),
                     JSONObject(vec![
                         (s("name"), JSONString(s("Madame Uppercut"))),
-                        (s("age"), JSONInteger(39)),
+                        (s("age"), JSONNumber(39.0)),
                         (s("secretIdentity"), JSONString(s("Jane Wilson"))),
                         (
                             s("powers"),
@@ -168,7 +145,7 @@ mod tests {
                     ]),
                     JSONObject(vec![
                         (s("name"), JSONString(s("Eternal Flame"))),
-                        (s("age"), JSONInteger(1000000)),
+                        (s("age"), JSONNumber(1000000.0)),
                         (s("secretIdentity"), JSONString(s("Unknown"))),
                         (
                             s("powers"),
